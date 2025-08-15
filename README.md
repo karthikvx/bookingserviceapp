@@ -20,7 +20,7 @@ A Spring Boot MVC application with Thymeleaf frontend and Kafka integration for 
 - **Database**: H2 (development) / MySQL / PostgreSQL (production)
 - **Message Queue**: Apache Kafka
 - **Build Tool**: gradle 8.14.2
-- **Java Version**: 24
+- **Java Version**: 21
 
 ## 📋 Prerequisites
 

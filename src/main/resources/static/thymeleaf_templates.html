@@ -1,0 +1,360 @@
+<!-- 1. Base Layout Template (templates/layout/base.html) -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} ?: 'Booking System'">Booking System</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+        }
+        .btn-danger {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            border: none;
+        }
+        .alert {
+            border: none;
+            border-radius: 10px;
+        }
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        .booking-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        .booking-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/bookings">
+                <i class="bi bi-calendar-check"></i> Booking System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/bookings">All Bookings</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <span class="navbar-text">
+                            <i class="bi bi-person-circle"></i> Welcome, User!
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Flash Messages -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Content -->
+        <div th:replace="${content}">
+            Content goes here
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        // Confirm before cancelling booking
+        function confirmCancel(bookingId, resourceId) {
+            if (confirm(`Are you sure you want to cancel the booking for ${resourceId}?`)) {
+                document.getElementById(`cancel-form-${bookingId}`).submit();
+            }
+        }
+
+        // Set current datetime for new booking form
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            const dateTimeInput = document.getElementById('bookingDate');
+            if (dateTimeInput) {
+                dateTimeInput.value = now.toISOString().slice(0, 16);
+            }
+        });
+    </script>
+</body>
+</html>
+
+<!-- 2. Booking List Template (templates/bookings/list.html) -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>All Bookings - Booking System</title>
+</head>
+<body>
+    <main>
+        <div class="row">
+            <!-- Add New Booking Form -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-plus-circle"></i> Add New Booking
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/bookings/add}" th:object="${bookingRequest}" method="post">
+                            <div class="mb-3">
+                                <label for="userId" class="form-label">User ID</label>
+                                <input type="text" class="form-control" id="userId" th:field="*{userId}" 
+                                       placeholder="Enter user ID" required>
+                                <div th:if="${#fields.hasErrors('userId')}" class="invalid-feedback d-block">
+                                    <span th:errors="*{userId}"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="resourceId" class="form-label">Resource ID</label>
+                                <input type="text" class="form-control" id="resourceId" th:field="*{resourceId}" 
+                                       placeholder="Enter resource ID" required>
+                                <div th:if="${#fields.hasErrors('resourceId')}" class="invalid-feedback d-block">
+                                    <span th:errors="*{resourceId}"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bookingDate" class="form-label">Booking Date & Time</label>
+                                <input type="datetime-local" class="form-control" id="bookingDate" 
+                                       th:field="*{bookingDate}" required>
+                                <div th:if="${#fields.hasErrors('bookingDate')}" class="invalid-feedback d-block">
+                                    <span th:errors="*{bookingDate}"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes (Optional)</label>
+                                <textarea class="form-control" id="notes" th:field="*{notes}" 
+                                          rows="3" placeholder="Additional notes..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-lg"></i> Create Booking
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookings List -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-list-ul"></i> Active Bookings
+                        </h5>
+                        <span class="badge bg-primary" th:text="${#lists.size(bookings)} + ' total'">0 total</span>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(bookings)}" class="text-center py-5">
+                            <i class="bi bi-calendar-x display-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">No Active Bookings</h4>
+                            <p class="text-muted">Create your first booking using the form on the left.</p>
+                        </div>
+                        
+                        <div th:if="${not #lists.isEmpty(bookings)}" class="row">
+                            <div th:each="booking : ${bookings}" class="col-12 mb-3">
+                                <div class="card booking-card">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <h6 class="card-title mb-1">
+                                                    <i class="bi bi-person-fill text-primary"></i>
+                                                    <span th:text="${booking.userId}">User ID</span>
+                                                </h6>
+                                                <p class="card-text mb-1">
+                                                    <i class="bi bi-cpu text-success"></i>
+                                                    <strong>Resource:</strong> <span th:text="${booking.resourceId}">Resource ID</span>
+                                                </p>
+                                                <p class="card-text mb-1">
+                                                    <i class="bi bi-calendar-event text-info"></i>
+                                                    <strong>Date:</strong> 
+                                                    <span th:text="${#temporals.format(booking.bookingDate, 'yyyy-MM-dd HH:mm')}">Date</span>
+                                                </p>
+                                                <p class="card-text mb-0">
+                                                    <i class="bi bi-clock text-warning"></i>
+                                                    <small class="text-muted">
+                                                        Created: <span th:text="${#temporals.format(booking.createdAt, 'yyyy-MM-dd HH:mm')}">Created</span>
+                                                    </small>
+                                                </p>
+                                            </div>
+                                            <div class="col-md-4 text-end">
+                                                <span class="badge bg-success mb-2" th:text="${booking.status}">Status</span>
+                                                <br>
+                                                <form th:id="'cancel-form-' + ${booking.id}" 
+                                                      th:action="@{'/bookings/cancel/' + ${booking.id}}" 
+                                                      method="post" class="d-inline">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            th:onclick="'confirmCancel(' + ${booking.id} + ', \'' + ${booking.resourceId} + '\')'">
+                                                        <i class="bi bi-x-circle"></i> Cancel
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+
+<!-- 3. User Bookings Template (templates/bookings/user-bookings.html) -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title th:text="'Bookings for ' + ${userId} + ' - Booking System'">User Bookings</title>
+</head>
+<body>
+    <main>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-circle"></i> 
+                            Bookings for <span th:text="${userId}">User</span>
+                        </h5>
+                        <a href="/bookings" class="btn btn-light btn-sm">
+                            <i class="bi bi-arrow-left"></i> Back to All Bookings
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(bookings)}" class="text-center py-5">
+                            <i class="bi bi-calendar-x display-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">No Active Bookings</h4>
+                            <p class="text-muted">This user has no active bookings.</p>
+                        </div>
+                        
+                        <div th:if="${not #lists.isEmpty(bookings)}" class="row">
+                            <div th:each="booking : ${bookings}" class="col-md-6 col-lg-4 mb-3">
+                                <div class="card booking-card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="bi bi-cpu text-success"></i>
+                                            <span th:text="${booking.resourceId}">Resource</span>
+                                        </h6>
+                                        <p class="card-text">
+                                            <i class="bi bi-calendar-event text-info"></i>
+                                            <strong>Date:</strong><br>
+                                            <span th:text="${#temporals.format(booking.bookingDate, 'yyyy-MM-dd')}">Date</span>
+                                        </p>
+                                        <p class="card-text">
+                                            <i class="bi bi-clock text-warning"></i>
+                                            <strong>Time:</strong><br>
+                                            <span th:text="${#temporals.format(booking.bookingDate, 'HH:mm')}">Time</span>
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-success" th:text="${booking.status}">Status</span>
+                                            <form th:id="'cancel-form-' + ${booking.id}" 
+                                                  th:action="@{'/bookings/cancel/' + ${booking.id}}" 
+                                                  method="post" class="d-inline">
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        th:onclick="'confirmCancel(' + ${booking.id} + ', \'' + ${booking.resourceId} + '\')'">
+                                                    <i class="bi bi-x-circle"></i> Cancel
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer text-muted">
+                                        <small>
+                                            <i class="bi bi-plus-circle"></i>
+                                            Created: <span th:text="${#temporals.format(booking.createdAt, 'MM-dd HH:mm')}">Created</span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
+
+<!-- 4. Error Template (templates/error.html) -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::main})}">
+<head>
+    <title>Error - Booking System</title>
+</head>
+<body>
+    <main>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-exclamation-triangle display-1 text-danger"></i>
+                        <h2 class="mt-3">Oops! Something went wrong</h2>
+                        <p class="text-muted mb-4">
+                            We encountered an error while processing your request.
+                        </p>
+                        <div th:if="${error}" class="alert alert-danger text-start">
+                            <strong>Error Details:</strong>
+                            <p th:text="${error}" class="mb-0">Error message</p>
+                        </div>
+                        <a href="/bookings" class="btn btn-primary">
+                            <i class="bi bi-house"></i> Go to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
