@@ -21,6 +21,10 @@ A Spring Boot MVC application with Thymeleaf frontend and Kafka integration for 
 - **Message Queue**: Apache Kafka
 - **Build Tool**: gradle 8.14.2
 - **Java Version**: 21
+-
+
+- ![MVC](./assets/mvc-design.png)
+- ![BOOKING APP](./assets/booking-mvc.png)
 
 ## 📋 Prerequisites
 
@@ -40,7 +44,9 @@ cd booking-mvc-app
 ```bash
 docker-compose up -d
 ```
-
+-
+- ![Kafka Topic](./assets/kafka-message-topics.png)
+-
 ### 3. Run the Application
 ```bash
 # Development mode with sample data
